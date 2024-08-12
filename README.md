@@ -56,8 +56,9 @@ This project is a comprehensive data analytics and reporting platform for insura
     Access the endpoints to interact with the application.
       - List all vehicles: `http://localhost:8081/api/vehicles`
       - List all KPIs: `http://localhost:8081/api/kpis`
-      - Get vehicle by ID: `http://localhost:8081/api/vehicles/{id}` (note: the link is under construction)
-      - Get KPI by policy ID: `http://localhost:8081/api/kpis/{policyId}` (note: the link is under construction)
+      - Get KPI by policy ID: `http://localhost:8081/api/kpis/{policyId}` (For example, ./kpis/263)
+      - Get vehicle by ID: `http://localhost:8081/api/vehicles/{id}`   (For example, ./vehicles/549)
+
 
 7. **Reference**:
      - Dataset: AQQAD, ABDELRAHIM (2023), “insurance_claims ”, Mendeley Data, V2, doi: 10.17632/992mh7dk9y.2
