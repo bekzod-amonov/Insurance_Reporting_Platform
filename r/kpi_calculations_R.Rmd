@@ -1,0 +1,201 @@
+---
+title: "insurance_claims_insights"
+author: "Bekzod_Amonov"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+# Install and load necessary packages
+install.packages("RPostgres")
+install.packages("dplyr")
+install.packages("rlang")
+install.packages("crayon")
+
+library(RPostgres)
+library(DBI)
+library(dplyr)
+library(rlang)
+library(crayon)
+
+# Set up database connection
+con <- dbConnect(RPostgres::Postgres(),
+                 dbname = 'insurance_claims_insights',
+                 host = 'localhost',
+                 port = 5432,
+                 user = 'postgres',
+                 password = '123321')
+
+# Check if the connection is successful by listing the tables
+print(dbListTables(con))
+
+# Function to fetch and print a few rows from each table
+check_table <- function(table_name) {
+  query <- paste0("SELECT * FROM ", table_name, " LIMIT 5")
+  data <- dbGetQuery(con, query)
+  print(data)
+}
+
+# List of table names
+tables <- c("claims", "incidents", "insurance_claims", "insured", "policies", "vehicles")
+
+# Check each table
+lapply(tables, check_table) 
+lapply("claims",check_table) 
+
+# Define the query to fetch data from the Policies table
+query_policies <- "
+SELECT policyid, policyannualpremium, policybinddate
+FROM policies
+"
+
+# Define the query to fetch data from the Claims table
+query_claims <- "
+SELECT claimid, policyid, fraudreported, totalclaimamount
+FROM claims
+"
+
+# Define the query to fetch data from the Financial Metrics table
+query_financial_metrics <- "
+SELECT insuredid, capitalgains, capitalloss
+FROM insured
+"
+
+# Fetch data from the database
+policies_data <- dbGetQuery(con, query_policies)
+claims_data <- dbGetQuery(con, query_claims)
+financial_metrics_data <- dbGetQuery(con, query_financial_metrics)
+
+
+# Print column names to verify
+print(names(policies_data))
+print(names(claims_data))
+print(names(financial_metrics_data))
+
+# Check and print the data to ensure it is loaded correctly
+print(head(policies_data))
+print(head(claims_data))
+print(head(financial_metrics_data))
+
+
+# Before moving to actual calculations let's first check for any inconsistencies in the dataset
+
+#Check for duplicate entries
+total_rows <- nrow(claims_data)
+unique_rows <- nrow(unique(claims_data))
+print(paste("Total rows:", total_rows))
+print(paste("Unique rows:", unique_rows))
+print(paste("Duplicate rows:", total_rows - unique_rows))
+
+# If there are duplicates, let's see some examples
+if(total_rows > unique_rows) {
+  duplicates <- claims_data[duplicated(claims_data) | duplicated(claims_data, fromLast = TRUE), ]
+  print("Sample of duplicate rows:")
+  print(head(duplicates))
+}
+
+#Check the distribution of claims per policy
+claims_per_policy <- table(claims_data$policyid)
+print(summary(claims_per_policy))
+
+# Policies with more than one claim
+multiple_claims <- sum(claims_per_policy > 1)
+print(paste("Number of policies with multiple claims:", multiple_claims))
+
+# If there are policies with many claims, let's look at them
+if(max(claims_per_policy) > 2) {
+  print("Policies with the most claims:")
+  print(sort(claims_per_policy, decreasing = TRUE)[1:10])
+}
+
+#Cross-check with other tables:
+# Check if all policyids in claims_data exist in policies_data
+missing_policies <- setdiff(claims_data$policyid, policies_data$policyid)
+print(paste("Number of claims with missing policies:", length(missing_policies)))
+
+# Check if there are more claims than policies
+print(paste("Number of unique policies in claims:", length(unique(claims_data$policyid))))
+print(paste("Number of policies in policies_data:", nrow(policies_data)))
+
+#Check for any unexpected values
+print(summary(claims_data))
+
+#Let's move to the calculation of key metrics
+
+#PVFP: We'll need to consider the total premiums against the total claims for each policy, rather than assuming one claim per policy.
+#VNB: This will be affected as we need to consider all claims associated with a policy when calculating its profitability.
+#SCR: The risk assessment will need to account for policies with multiple claims, which might indicate higher risk.
+
+#Aggregate claims data by policy
+claims_summary <- claims_data %>%
+  group_by(policyid) %>%
+  summarise(
+    total_claims = n(),
+    total_claim_amount = sum(totalclaimamount),
+    fraud_reported = any(fraudreported == 'Y')
+  )
+
+#Join this summarized claims data with the policies data
+policy_analysis <- policies_data %>%
+  left_join(claims_summary, by = "policyid") %>%
+  left_join(financial_metrics_data, by = c("policyid" = "insuredid"))
+
+# Replace NA values with 0 for policies without claims
+policy_analysis <- policy_analysis %>%
+  mutate(
+    total_claims = coalesce(total_claims, 0),
+    total_claim_amount = coalesce(total_claim_amount, 0),
+    fraud_reported = coalesce(fraud_reported, FALSE)
+  )
+
+# Define the discount rate and risk-free rate
+discount_rate <- 0.05
+risk_free_rate <- 0.02
+
+# Calculate PVFP
+# Calculate VNB (assuming Costs are derived from claims and capital gains/loss).
+# Calculate SCR (simple example, typically involves more complex actuarial models).
+policy_analysis <- policy_analysis %>%
+  mutate(
+    PVFP = policyannualpremium / (1 + discount_rate) - total_claim_amount / (1 + discount_rate),
+    VNB = (policyannualpremium - total_claim_amount - capitalloss + capitalgains) / (1 + discount_rate),
+    risk_factor = case_when(
+      total_claims > 2 ~ 3,
+      total_claims > 0 ~ 2,
+      TRUE ~ 1
+    ),
+    SCR = (total_claim_amount + capitalloss - policyannualpremium - capitalgains) * risk_factor / (1 + risk_free_rate)
+  )
+  
+# Print the results
+print(financial_data)
+
+# Save the results back to the database (optional)
+dbWriteTable(con, "kpiresults", policy_analysis, overwrite = TRUE, row.names = FALSE)
+
+# Close the database connection
+dbDisconnect(con)
+
