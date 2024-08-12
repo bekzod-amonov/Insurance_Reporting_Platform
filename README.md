@@ -52,7 +52,7 @@ This project is a comprehensive data analytics and reporting platform for insura
     Run unit and integration tests using Maven:
         `mvn test`
 
-6. **Usage**:
+6. **Usage**/n:
     Access the endpoints to interact with the application.
       - List all vehicles: `http://localhost:8081/api/vehicles`
       - List all KPIs: `http://localhost:8081/api/kpis`
