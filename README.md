@@ -32,3 +32,32 @@ This project is a comprehensive data analytics and reporting platform for insura
 ### Step-by-Step Setup
 
 1. **Clone the repository**:
+2. **SQL Setup**:
+   - Run the scripts in the sql directory to set up the database.
+   - Ensure PostgreSQL is running and accessible.
+3. **R Setup**: 
+   - Open r/kpi_calculations.R in RStudio.
+   - Install required packages and run the script to perform KPI calculations.
+   - Save the results back to the database.
+4. **Java Setup**:
+   - Ensure Maven is installed.
+   - Update the application.properties file with your PostgreSQL credentials.
+   - Build and run the application:
+       `mvn clean install`
+       `mvn spring-boot:run`
+5. **Access the Application**:
+   - Open your browser and go to `http://localhost:8081`. 
+   - `mvn spring-boot:run`
+
+Run unit and integration tests using Maven:
+    `mvn test`
+
+6. **Usage**:
+    Access the endpoints to interact with the application.
+      - List all vehicles: `http://localhost:8081/api/vehicles`
+      - Get vehicle by ID: `http://localhost:8081/api/vehicles/{id}`
+      - List all KPIs: `http://localhost:8081/api/kpis`
+      - Get KPI by policy ID: `http://localhost:8081/api/kpis/{policyId}`
+  
+ **License**
+      This project is licensed under the MIT License.
