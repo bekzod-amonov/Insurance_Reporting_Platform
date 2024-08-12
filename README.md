@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a comprehensive data analytics and reporting platform for insurance data. It handles data ingestion, transformation, and generates insightful reports on key performance indicators (KPIs) such as PVFP, VNB, and other Solvency II metrics.
+This project is a comprehensive data analytics and reporting platform for insurance data. It handles data ingestion, transformation, and generates insightful reports on key performance indicators (KPIs) such as PVFP, VNB, and other Solvency II metrics. Please see the reference part below to get an overview of the dataset used.
 
 ## Project Structure
 
@@ -58,6 +58,9 @@ Run unit and integration tests using Maven:
       - List all KPIs: `http://localhost:8081/api/kpis`
       - Get vehicle by ID: `http://localhost:8081/api/vehicles/{id}` (note: the link is under construction)
       - Get KPI by policy ID: `http://localhost:8081/api/kpis/{policyId}` (note: the link is under construction)
+
+7. **Reference**:
+     - Dataset: AQQAD, ABDELRAHIM (2023), “insurance_claims ”, Mendeley Data, V2, doi: 10.17632/992mh7dk9y.2
   
  **License**
       This project is licensed under the MIT License.
