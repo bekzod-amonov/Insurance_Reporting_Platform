@@ -55,8 +55,8 @@ Run unit and integration tests using Maven:
 6. **Usage**:
     Access the endpoints to interact with the application.
       - List all vehicles: `http://localhost:8081/api/vehicles`
+      - List all KPIs: `http://localhost:8081/api/kpis`
       - Get vehicle by ID: `http://localhost:8081/api/vehicles/{id}` (note: the link is under construction)
-      - List all KPIs: `http://localhost:8081/api/kpis` (note: the link is under construction)
       - Get KPI by policy ID: `http://localhost:8081/api/kpis/{policyId}` (note: the link is under construction)
   
  **License**
