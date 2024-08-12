@@ -49,8 +49,8 @@ This project is a comprehensive data analytics and reporting platform for insura
    - Open your browser and go to `http://localhost:8081`. 
    - `mvn spring-boot:run`
 
-Run unit and integration tests using Maven:
-    `mvn test`
+    Run unit and integration tests using Maven:
+        `mvn test`
 
 6. **Usage**:
     Access the endpoints to interact with the application.
